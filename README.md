@@ -62,13 +62,11 @@ The seed changes every 6 hours. If you want to do more testing, don't change
 the seed - instead increase the iteration count or add more cases to your
 generator.
 
-**randomReal()**: Generate a random float less than 1. This function is a
+- **randomReal()**: Generate a random float less than 1. This function is a
 direct replacement for Math.random(), except it uses a seed.
-
-**randomInt(n)**: Generate a random int in the range [0,n). (Ie, a non-negative
+- **randomInt(n)**: Generate a random int in the range [0,n). (Ie, a non-negative
 integer less than n).
-
-**randomWord(n)**: Select and return a random word. The word is chosen from the
+- **randomWord(n)**: Select and return a random word. The word is chosen from the
 jabberwocky.
 
 ---
