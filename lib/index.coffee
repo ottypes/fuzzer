@@ -55,14 +55,14 @@ composeList = (type, ops) -> ops.reduce type.compose
 clone = (o) -> JSON.parse(JSON.stringify o)
 
 # Returns client result
-testRandomOp = (type, generateRandomOp, initialDoc = type.create()) ->
+testRandomOp = (type, genRandomOp, initialDoc = type.create()) ->
   makeDoc = -> ops:[], result:initialDoc
   opSets = (makeDoc() for [0...3])
   [client, client2, server] = opSets
 
   for [0...10]
     doc = opSets[randomInt 3]
-    [op, doc.result] = generateRandomOp doc.result
+    [op, doc.result] = genRandomOp doc.result
     doc.ops.push(op)
 
   p "Doc #{i initialDoc} + #{i ops} = #{i result}" for {ops, result} in [client, client2, server]
@@ -161,8 +161,8 @@ testRandomOp = (type, generateRandomOp, initialDoc = type.create()) ->
   if type.prune?
     p 'PRUNE'
     
-    [op1] = generateRandomOp initialDoc
-    [op2] = generateRandomOp initialDoc
+    [op1] = genRandomOp initialDoc
+    [op2] = genRandomOp initialDoc
 
     for idDelta in ['left', 'right']
       op1_ = type.transform op1, op2, idDelta
@@ -211,7 +211,7 @@ collectStats = (type) ->
   [stats, restore]
 
 # Run some iterations of the random op tester. Requires a random op generator for the type.
-module.exports = (type, generateRandomOp, iterations = 2000) ->
+module.exports = (type, genRandomOp, iterations = 2000) ->
   assert.ok type.transform
 
   [stats, restore] = collectStats type
@@ -230,7 +230,7 @@ module.exports = (type, generateRandomOp, iterations = 2000) ->
   for n in [0..iterations]
     if n % (iterationsPerPct * 2) == 0
       process.stdout.write (if n % (iterationsPerPct * 10) == 0 then "#{n / iterationsPerPct}" else '.')
-    doc = testRandomOp(type, generateRandomOp, doc)
+    doc = testRandomOp(type, genRandomOp, doc)
   console.log()
 
   console.timeEnd 'randomizer'
