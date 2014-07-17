@@ -1,0 +1,27 @@
+{
+  "name": "ot-fuzzer",
+  "version": "1.0.0",
+  "description": "Fuzzer for operational transformation data types",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublish": "coffee -cbm lib/index.coffee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ottypes/fuzzer.git"
+  },
+  "keywords": [
+    "ot",
+    "sharejs"
+  ],
+  "author": "Joseph Gentle <me@josephg.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ottypes/fuzzer/issues"
+  },
+  "homepage": "https://github.com/ottypes/fuzzer",
+  "devDependencies": {
+    "coffee-script": "^1.7.1"
+  }
+}
