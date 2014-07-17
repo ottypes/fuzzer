@@ -20,6 +20,10 @@ var generateRandomOp = function(snapshot) {
 fuzzer(mytype, generateRandomOp);
 ```
 
+---
+
+## API
+
 You need to write a random op generator function for your type:
 
 **generateRandomOp(snapshot) -> [op, newSnapshot]**: generateRandomOp
@@ -67,8 +71,9 @@ integer less than n).
 **randomWord(n)**: Select and return a random word. The word is chosen from the
 jabberwocky.
 
+---
 
-### Commentary
+## Commentary
 
 This library is several years old now. I (Joseph) wrote it when I first started
 writing the original prototype of ShareJS. It then lived for awhile in the
