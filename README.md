@@ -68,6 +68,25 @@ integer less than n).
 jabberwocky.
 
 
+### Commentary
+
+This library is several years old now. I (Joseph) wrote it when I first started
+writing the original prototype of ShareJS. It then lived for awhile in the
+share/ottypes library, and its now been separated out.
+
+The randomizer has also helped debug my C implementation of the text type. I
+wired the randomizer to output what it was testing into a few hundred megs of
+JSON files, and then read the data back in from my C program. It worked great.
+
+The code is in coffeescript for purely historical reasons. I'd love to move it
+to javascript - I'm just strapped for time. I'd welcome a pull request if
+anyone is keen to help. (Please start with the coffeescript compiled output if
+so).
+
+There's also no unit tests - and there really should be. This code is
+routinely tested by actually running it against things. But it could use some
+simple tests of its own to make sure it actually catches obvious bugs in a
+dummy OT type.
 
 
 ---
