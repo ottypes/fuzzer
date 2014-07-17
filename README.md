@@ -66,8 +66,17 @@ generator.
 direct replacement for Math.random(), except it uses a seed.
 - **randomInt(n)**: Generate a random int in the range [0,n). (Ie, a non-negative
 integer less than n).
-- **randomWord(n)**: Select and return a random word. The word is chosen from the
+- **randomWord()**: Select and return a random word. The word is chosen from the
 jabberwocky.
+
+These functions are exposed on the fuzzer function. Eg:
+
+```javascript
+var fuzzer = require('ot-fuzzer');
+
+console.log("I have " + fuzzer.randomInt(100) + " " + fuzzer.randomWord() + " in my basket");
+// -> I have 69 mimsy in my basket
+```
 
 ---
 
