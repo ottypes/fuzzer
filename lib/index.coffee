@@ -28,7 +28,7 @@ randomWord = exports.randomWord = do ->
 
 # Cross-transform function. Transform server by client and client by server. Returns
 # [server, client].
-transformX = exports.transformX = (type, left, right) ->
+transformX = (type, left, right) ->
   [type.transform(left, right, 'left'), type.transform(right, left, 'right')]
 
 # Transform a list of server ops by a list of client ops.
