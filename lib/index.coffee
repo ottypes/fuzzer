@@ -52,7 +52,7 @@ composeList = (type, ops) -> ops.reduce type.compose
 # assuming we have support for JSON.
 #
 # This is needed because calling apply() now destroys the original object.
-clone = (o) -> JSON.parse(JSON.stringify o)
+clone = (o) -> if typeof o == 'object' then JSON.parse(JSON.stringify o) else o
 
 # Returns client result
 testRandomOp = (type, genRandomOp, initialDoc = type.create()) ->
@@ -69,9 +69,9 @@ testRandomOp = (type, genRandomOp, initialDoc = type.create()) ->
 
   checkSnapshotsEq = (a, b) ->
     if type.serialize
-      assert.deepEqual type.serialize(a), type.serialize(b)
+      assert.deepStrictEqual type.serialize(a), type.serialize(b)
     else
-      assert.deepEqual a, b
+      assert.deepStrictEqual a, b
 
   # First, test type.apply.
   for set in opSets
@@ -157,14 +157,14 @@ testRandomOp = (type, genRandomOp, initialDoc = type.create()) ->
         x2 = server.composed
         x2 = type.transform x2, client.composed, 'left'
 
-        assert.deepEqual x1, x2
+        assert.deepStrictEqual x1, x2
 
       if type.tp2 and client2.composed?
         # TP2 requires that T(op3, op1 . T(op2, op1)) == T(op3, op2 . T(op1, op2)).
         lhs = type.transform client2.composed, type.compose(client.composed, server_), 'left'
         rhs = type.transform client2.composed, type.compose(server.composed, client_), 'left'
 
-        assert.deepEqual lhs, rhs
+        assert.deepStrictEqual lhs, rhs
 
   if type.prune?
     p 'PRUNE'
@@ -176,13 +176,13 @@ testRandomOp = (type, genRandomOp, initialDoc = type.create()) ->
       op1_ = type.transform op1, op2, idDelta
       op1_pruned = type.prune op1_, op2, idDelta
 
-      assert.deepEqual op1, op1_pruned
+      assert.deepStrictEqual op1, op1_pruned
 
   # Now we'll check the n^2 transform method.
   if client.ops.length > 0 && server.ops.length > 0
     p "s #{i server.result} c #{i client.result} XF #{i server.ops} x #{i client.ops}"
     [s_, c_] = transformLists type, server.ops, client.ops
-    p "XF result #{i s_} x #{i c_}"
+    p "XF result -> #{i s_} x #{i c_}"
 #    p "applying #{i c_} to #{i server.result}"
     s_c = c_.reduce type.apply, clone server.result
     c_s = s_.reduce type.apply, clone client.result
