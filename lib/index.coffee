@@ -115,6 +115,16 @@ testRandomOp = (type, genRandomOp, initialDoc = type.create()) ->
 
     testDiff set for set in opSets when doc.ops.length > 0
 
+  if type.diffX?
+    testDiffX = (doc) ->
+      [ op1_, op2_ ] = type.diffX initialDoc, doc.result
+      result1 = type.apply clone(doc.result), op1_
+      result2 = type.apply clone(initialDoc), op2_
+      checkSnapshotsEq result1, initialDoc
+      checkSnapshotsEq result2, doc.result
+
+    testDiffX set for set in opSets
+
   # If all the ops are composed together, then applied, we should get the same result.
   if type.compose?
     p 'COMPOSE'
