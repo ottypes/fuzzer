@@ -3,4 +3,5 @@
 node_modules
 
 lib/index.js
+lib/index.js.map
 lib/index.map
