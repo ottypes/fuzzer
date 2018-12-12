@@ -2,7 +2,7 @@
   "name": "ot-fuzzer",
   "version": "1.1.0",
   "description": "Fuzzer for operational transformation data types",
-  "main": "lib/index.js",
+  "main": "lib/index",
   "scripts": {
     "test": "mocha test",
     "prepublish": "coffee -cbm lib/index.coffee"
@@ -24,5 +24,9 @@
   "devDependencies": {
     "coffee-script": "^1.7.1",
     "mocha": "^1.20.1"
+  },
+  "dependencies": {
+    "cli-progress": "^2.1.1",
+    "seedrandom": "^2.4.4"
   }
 }

@@ -1,22 +1,32 @@
 assert = require 'assert'
 util = require 'util'
 fs = require 'fs'
+seedrandom = require 'seedrandom'
+{Bar} = require 'cli-progress'
+
+debugMode = false
 
 # You can use this to enable debugging info in this file.
-p = -> #util.debug
-i = -> # (o) -> util.inspect o, colors:true, depth:3
+p = (x) ->
+  console.warn x if debugMode
+i = (o) -> util.inspect o, colors:true, depth:5
 
 # By default, use a new seed every 6 hours. This balances making test runs stable while debugging
 # with avoiding obscure bugs caused by a rare seed.
-seed = Math.floor Date.now() / (1000*60*60*6)
+#seed = Math.floor Date.now() / (1000*60*60*6)
+seed = 1
 
-if seed?
-  mersenne = require './mersenne'
+restorefile = 'fuzzercrash.data'
+restorestate = {
+  iter: 0
+  seedstate: true
+}
 
-  mersenne.seed seed
-  randomReal = exports.randomReal = mersenne.rand_real
-else
-  randomReal = exports.randomReal = Math.random
+try
+  restorestate = JSON.parse fs.readFileSync(restorefile, 'utf8')
+  console.log "restored from #{restorefile} iteration #{restorestate.iter}"
+
+randomReal = exports.randomReal = seedrandom seed, state: restorestate.seedstate
 
 # Generate a random int 0 <= k < n
 randomInt = exports.randomInt = (n) -> Math.floor randomReal() * n
@@ -131,6 +141,7 @@ testRandomOp = (type, genRandomOp, initialDoc = type.create()) ->
     compose = (doc) ->
       if doc.ops.length > 0
         doc.composed = composeList type, doc.ops
+        p "Compose #{i doc.ops} = #{i doc.composed}"
         # .... And this should match the expected document.
         checkSnapshotsEq doc.result, type.apply clone(initialDoc), doc.composed
 
@@ -140,7 +151,9 @@ testRandomOp = (type, genRandomOp, initialDoc = type.create()) ->
   
     # Check the diamond property holds
     if client.composed? && server.composed?
+      p "Diamond\n\toriginal: #{i initialDoc}\n\tLeft: + #{i server.composed} -> #{i server.result}\n\tRight: + #{i client.composed} -> #{i client.result}"
       [server_, client_] = transformX type, server.composed, client.composed
+      p "XF #{i server.composed} x #{i client.composed} -> #{i server_} x #{i client_}"
 
       s_c = type.apply clone(server.result), client_
       c_s = type.apply clone(client.result), server_
@@ -193,7 +206,7 @@ testRandomOp = (type, genRandomOp, initialDoc = type.create()) ->
     p "s #{i server.result} c #{i client.result} XF #{i server.ops} x #{i client.ops}"
     [s_, c_] = transformLists type, server.ops, client.ops
     p "XF result -> #{i s_} x #{i c_}"
-#    p "applying #{i c_} to #{i server.result}"
+    p "applying #{i c_} to #{i server.result}"
     s_c = c_.reduce type.apply, clone server.result
     c_s = s_.reduce type.apply, clone client.result
 
@@ -228,6 +241,12 @@ collectStats = (type) ->
 
   [stats, restore]
 
+debugWhen = +process.env.DEBUG_WHEN if process.env.DEBUG_WHEN
+# console.log('dw', debugWhen, typeof debugWhen)
+
+save = (seedstate, doc, iter) ->
+  fs.writeFileSync('fuzzercrash.data', JSON.stringify {seedstate, doc, iter})
+
 # Run some iterations of the random op tester. Requires a random op generator for the type.
 module.exports = (type, genRandomOp, iterations = 2000) ->
   assert.ok type.transform
@@ -241,21 +260,48 @@ module.exports = (type, genRandomOp, iterations = 2000) ->
   warnUnless 'invert'
   warnUnless 'compose'
 
-  doc = type.create()
+  doc = if restorestate.doc then type.create(restorestate.doc) else type.create()
 
   console.time 'randomizer'
-  iterationsPerPct = iterations / 100
-  for n in [0..iterations]
-    if n % (iterationsPerPct * 2) == 0
-      process.stdout.write (if n % (iterationsPerPct * 10) == 0 then "#{n / iterationsPerPct}" else '.')
-    doc = testRandomOp(type, genRandomOp, doc)
-  console.log()
+  type.setDebug? false
+  # iterationsPerPct = iterations / 100
+  bar = new Bar {}
+  bar.start iterations, restorestate.iter  
+
+  for n in [restorestate.iter..iterations]
+    # if n % (iterationsPerPct * 2) == 0
+    #   process.stdout.write (if n % (iterationsPerPct * 10) == 0 then "#{n / iterationsPerPct}" else '.')
+
+    try
+      seedstate = randomReal.state()
+      save(seedstate, doc, n) if n % 1000 == 0
+      bar.update n
+
+      if debugWhen && n == debugWhen
+        debugMode = true
+        type.setDebug?(true)
+        debugger
+
+      doc = testRandomOp(type, genRandomOp, doc)
+      if debugWhen && n == debugWhen
+        break
+    catch e
+      bar.stop()
+      console.log "----- 💣💥 CRASHED AT ITER #{n} -----"
+      fs.writeFileSync restorefile, JSON.stringify {seedstate, doc, iter: n}
+      console.log 'Fuzzer state saved to fuzzercrash.data'
+      throw e
+
+  bar.stop()
 
   console.timeEnd 'randomizer'
+  console.log()
 
   console.log "Performed:"
   console.log "\t#{fn}s: #{number}" for fn, number of stats
 
   restore()
+
+  fs.unlinkSync restorefile
 
 module.exports[k] = v for k, v of exports
