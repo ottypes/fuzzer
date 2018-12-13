@@ -2,21 +2,21 @@ assert = require 'assert'
 util = require 'util'
 fs = require 'fs'
 seedrandom = require 'seedrandom'
-{Bar} = require 'cli-progress'
+{Bar, Presets} = require 'cli-progress'
 
-debugMode = false
+debugMode = !!process.env.DEBUG
 
 # You can use this to enable debugging info in this file.
 p = (x) ->
   console.warn x if debugMode
-i = (o) -> util.inspect o, colors:true, depth:5
+i = (o) -> util.inspect o, colors:true, depth:null
 
 # By default, use a new seed every 6 hours. This balances making test runs stable while debugging
 # with avoiding obscure bugs caused by a rare seed.
 #seed = Math.floor Date.now() / (1000*60*60*6)
-seed = 1
+seed = process.env.SEED ? 1
 
-restorefile = 'fuzzercrash.data'
+restorefile = process.env.SYNCFILE ? 'fuzzercrash.data'
 restorestate = {
   iter: 0
   seedstate: true
@@ -241,9 +241,6 @@ collectStats = (type) ->
 
   [stats, restore]
 
-debugWhen = +process.env.DEBUG_WHEN if process.env.DEBUG_WHEN
-# console.log('dw', debugWhen, typeof debugWhen)
-
 save = (seedstate, doc, iter) ->
   fs.writeFileSync('fuzzercrash.data', JSON.stringify {seedstate, doc, iter})
 
@@ -263,10 +260,10 @@ module.exports = (type, genRandomOp, iterations = 2000) ->
   doc = if restorestate.doc then type.create(restorestate.doc) else type.create()
 
   console.time 'randomizer'
-  type.setDebug? false
+  type.setDebug? debugMode
   # iterationsPerPct = iterations / 100
-  bar = new Bar {}
-  bar.start iterations, restorestate.iter  
+  bar = new Bar {fps:3, etaBuffer:4000}, Presets.shades_classic
+  bar.start iterations, restorestate.iter
 
   for n in [restorestate.iter..iterations]
     # if n % (iterationsPerPct * 2) == 0
@@ -277,14 +274,9 @@ module.exports = (type, genRandomOp, iterations = 2000) ->
       save(seedstate, doc, n) if n % 1000 == 0
       bar.update n
 
-      if debugWhen && n == debugWhen
-        debugMode = true
-        type.setDebug?(true)
-        debugger
+      debugger if debugMode
 
       doc = testRandomOp(type, genRandomOp, doc)
-      if debugWhen && n == debugWhen
-        break
     catch e
       bar.stop()
       console.log "----- 💣💥 CRASHED AT ITER #{n} -----"
