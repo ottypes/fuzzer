@@ -4,8 +4,7 @@
   "description": "Fuzzer for operational transformation data types",
   "main": "lib/index",
   "scripts": {
-    "test": "mocha test",
-    "prepublish": "coffee -cbm lib/index.coffee"
+    "test": "mocha test"
   },
   "repository": {
     "type": "git",
@@ -22,8 +21,7 @@
   },
   "homepage": "https://github.com/ottypes/fuzzer",
   "devDependencies": {
-    "coffee-script": "^1.7.1",
-    "mocha": "^1.20.1"
+    "mocha": "^8.0.1"
   },
   "dependencies": {
     "cli-progress": "^2.1.1",
