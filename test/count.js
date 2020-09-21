@@ -24,6 +24,10 @@ const count = {
     if ((op1[0] + op1[1]) !== op2[0]) { throw new Error(`Op1 ${op1} + 1 != op2 ${op2}`); }
     return [op1[0], op1[1] + op2[1]];
   },
+
+  diff(snapshot1, snapshot2) {
+    return [snapshot1, snapshot2 - snapshot1];
+  },
 }
 
 
